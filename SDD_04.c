@@ -168,7 +168,7 @@ int main() {
 	printf("\n");
 
 	printf("Adaugare masina la final: \n");
-	adaugaMasinaInLista(&cap,(Masina){60,2,4000.0f,"Fabia","Alex","D" });
+	adaugaMasinaInLista(&cap,(Masina){60,2,4000.0f,"Fabia","Alex",'D' });
 	afisareListaMasini(cap);
 	printf("\n");
 
