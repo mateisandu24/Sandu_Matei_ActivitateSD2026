@@ -3,7 +3,8 @@
 #include <stdlib.h>
 #include <string.h>
 
-struct StructuraMasina {
+struct StructuraMasina
+{
 	int id;
 	int nrUsi;
 	float pret;
@@ -13,37 +14,55 @@ struct StructuraMasina {
 };
 typedef struct StructuraMasina Masina;
 
-struct Nod {
+
+struct Nod
+{
 	Masina masina;
+
 	struct Nod* next;
 	struct Nod* prev;
 };
 typedef struct Nod Nod;
 
+struct LDI
+{
+	Nod* first;
+	Nod* last;
+};
+typedef struct LDI LDI;
 
-Masina citireMasinaDinFisier(FILE* file) {
+Masina citireMasinaDinFisier(FILE* file)
+{
 	char buffer[100];
 	char sep[3] = ",\n";
+
 	fgets(buffer, 100, file);
+
 	char* aux;
-	Masina m1;
 	aux = strtok(buffer, sep);
+
+	Masina m1;
 	m1.id = atoi(aux);
 	m1.nrUsi = atoi(strtok(NULL, sep));
 	m1.pret = atof(strtok(NULL, sep));
+
 	aux = strtok(NULL, sep);
+
 	m1.model = malloc(strlen(aux) + 1);
 	strcpy_s(m1.model, strlen(aux) + 1, aux);
 
 	aux = strtok(NULL, sep);
+
 	m1.numeSofer = malloc(strlen(aux) + 1);
 	strcpy_s(m1.numeSofer, strlen(aux) + 1, aux);
 
 	m1.serie = *strtok(NULL, sep);
+
 	return m1;
 }
 
-void afisareMasina(Masina masina) {
+void afisareMasina(Masina masina)
+{
 	printf("Id: %d\n", masina.id);
 	printf("Nr. usi : %d\n", masina.nrUsi);
 	printf("Pret: %.2f\n", masina.pret);
@@ -52,110 +71,151 @@ void afisareMasina(Masina masina) {
 	printf("Serie: %c\n\n", masina.serie);
 }
 
-void afisareListaMasini(Nod* cap) {
-	while (cap) {
-		afisareMasina(cap->masina);
-		cap = cap->next;
-	}
-}
+void afisareListaMasiniDeLaInceput(LDI lista)
+{
 
-void adaugaMasinaInLista(Nod** cap, Masina masinaNoua) {
+	Nod* temp = lista.first;
 
-	Nod* nodNou = malloc(sizeof(Nod));
-	nodNou->masina = masinaNoua;
-	nodNou->next = NULL;
-	nodNou->prev = NULL;
-	if ((*cap) == NULL)
+	while (temp)
 	{
-		nodNou->prev = NULL;
-		*cap = nodNou;
-		return;
-	}
-	Nod* temp = *cap;
-	while (temp->next) {
+		afisareMasina(temp->masina);
 		temp = temp->next;
 	}
-	temp->next = nodNou;
-	nodNou->prev = temp;
-
 }
 
-void adaugaLaInceputInLista(Nod** cap, Masina masinaNoua)
-{
-	if ((*cap) == NULL) {
-		Nod* nodNou = malloc(sizeof(Nod));
-		nodNou->masina = masinaNoua;
-		nodNou->next = NULL;
-		nodNou->prev = NULL;
-		*cap = nodNou;
-		return;
-	}
+void afisareListaMasiniDeLaSfarsit(LDI lista) {
 
-	Nod* nodNou = malloc(sizeof(Nod));
-	nodNou->masina = masinaNoua;
-	nodNou->next = *cap;
-	nodNou->prev = NULL;
-	(*cap)->prev = nodNou;
-	*cap = nodNou;
+	Nod* temp = lista.last;
 
-}
-
-void* citireLDMasiniDinFisier(const char* numeFisier) {
-	FILE* file = fopen(numeFisier, "r");
-	Nod* cap = NULL;
-	while (!feof(file)) {
-		Masina m1 = citireMasinaDinFisier(file);
-		adaugaMasinaInLista(&cap, m1);
-	}
-	return cap;
-}
-
-
-
-void dezalocareLDMasini(Nod** temp) {
-	while ((*temp))
+	while (temp)
 	{
-		(*temp)->masina.model = NULL;
-		(*temp)->masina.numeSofer = NULL;
-		Nod* nou = *temp;
-		nou = nou->next;
-		free(*temp);
-		(*temp) = nou;
+		afisareMasina(temp->masina);
+		temp = temp->prev;
 	}
+}
+
+void adaugaMasinaInLista(LDI* lista, Masina masinaNoua) {
+
+	Nod* nodNou = (Nod*)malloc(sizeof(Nod));
+
+	nodNou->masina = masinaNoua;
+	nodNou->prev = lista->last;
+	nodNou->next = NULL;
+
+	if (lista->last)
+		lista->last->next = nodNou;
+
+	else
+		lista->first = nodNou;
+	lista->last = nodNou;
 
 }
 
-float calculeazaPretMediu(Nod* cap) {
+void adaugaLaInceputInLista(LDI* lista, Masina masinaNoua)
+{
+	Nod* nodNou = (Nod*)malloc(sizeof(Nod));
+
+	nodNou->masina = masinaNoua;
+	nodNou->prev = NULL;
+	nodNou->next = lista->first;
+
+	if (lista->first)
+		lista->first->prev = nodNou;
+
+	else
+		lista->last = nodNou;
+
+	lista->first = nodNou;
+
+}
+
+LDI citireLDMasiniDinFisier(const char* numeFisier) 
+{
+
+	FILE* file = fopen(numeFisier, "r");
+
+	LDI lista;
+	lista.first = NULL;
+	lista.last = NULL;
+
+	while (!feof(file)) 
+	{
+		Masina m1 = citireMasinaDinFisier(file);
+		adaugaMasinaInLista(&lista, m1);
+	}
+
+	fclose(file);
+	return lista;
+}
+
+void dezalocareLDMasini(LDI* lista) 
+{
+
+	Nod* cap = lista->first;
+
+	while (cap) 
+	{
+
+		free(cap->masina.model);
+		free(cap->masina.numeSofer);
+
+		Nod* nodGolit = cap;
+		cap = cap->next;
+		free(nodGolit);
+	}
+
+	lista->first = NULL;
+	lista->last = NULL;
+}
+
+
+float calculeazaPretMediu(LDI lista) 
+{
+
 	float pretMediu = 0;
 	int nrMasini = 0;
-	while (cap) {
+
+	Nod* cap = lista.first;
+
+	while (cap) 
+	{
+
 		pretMediu += cap->masina.pret;
 		nrMasini++;
+
 		cap = cap->next;
 	}
-	return pretMediu / nrMasini;
+
+	if (nrMasini)
+		return pretMediu / nrMasini;
+
+	return 0;
 }
 
-void stergeMasinaDupaID(Nod** cap, int id) {
-	Nod* curent = *cap;
-	while (curent) {
-		if (curent->masina.id == id) {
+void stergeMasinaDupaID(LDI* lista, int id) 
+{
 
-			if (curent->prev) {
+	Nod* curent = lista->first;
+
+	while (curent) 
+	{
+		if (curent->masina.id == id) 
+		{
+
+			if (curent->prev)
 				curent->prev->next = curent->next;
-			}
-			else {
-				*cap = curent->next;
-			}
-
-
-			if (curent->next) {
+			else 
+				lista->first = curent->next;
+			
+			if (curent->next) 
 				curent->next->prev = curent->prev;
-			}
-
+			else 
+				lista->last = curent->prev;
+			
 			free(curent->masina.model);
 			free(curent->masina.numeSofer);
 			free(curent);
+			
 			return;
 		}
 		curent = curent->next;
@@ -163,13 +223,20 @@ void stergeMasinaDupaID(Nod** cap, int id) {
 }
 
 
-char* getNumeSoferMasinaScumpa(Nod* cap) {
+char* getNumeSoferMasinaScumpa(LDI lista) 
+{
 	char* numeSofer = NULL;
 	float maxim = 0;
-	while (cap) {
-		if (cap->masina.pret > maxim) {
+	Nod* cap = lista.first;
+
+	while (cap) 
+	{
+		if (cap->masina.pret > maxim) 
+		{
 			maxim = cap->masina.pret;
+
 			free(numeSofer);
+
 			numeSofer = (char*)malloc(strlen(cap->masina.numeSofer) + 1);
 			strcpy(numeSofer, cap->masina.numeSofer);
 		}
@@ -178,36 +245,57 @@ char* getNumeSoferMasinaScumpa(Nod* cap) {
 	return numeSofer;
 }
 
+Masina creareMasina(int id, int nrUsi, float pret, const char* model, const char* numeSofer, unsigned char serie) {
+	//am creeat functia asta pentru ca nu mai suport sa primesc erori de copiere de tip shallow si ca nu se realizeaza deep copy :,)
+	Masina m;
+	m.id = id;
+	m.nrUsi = nrUsi;
+	m.pret = pret;
+
+	m.model = (char*)malloc(strlen(model) + 1);
+	strcpy(m.model, model);
+
+	m.numeSofer = (char*)malloc(strlen(numeSofer) + 1);
+	strcpy(m.numeSofer, numeSofer);
+
+	m.serie = serie;
+	return m;
+}
+
 int main() {
 
 	printf("Citirea listei din fisier:\n");
-	Nod* cap = citireLDMasiniDinFisier("masini.txt");
-	afisareListaMasini(cap);
+	LDI lista = citireLDMasiniDinFisier("masini.txt");
+	afisareListaMasiniDeLaInceput(lista);
+	printf("\n");
 
+	printf("Afisare inversa:\n");
+	afisareListaMasiniDeLaSfarsit(lista);
+
+	Masina m1 = creareMasina(100, 4, 12000.0f, "Sandero", "Ana", 'D');
 	printf("Adaugare la inceput:\n");
-	adaugaLaInceputInLista(&cap, (Masina) { 100, 4, 12000.0f, "Sandero", "Ana", 'D' });
-	afisareListaMasini(cap);
+	adaugaLaInceputInLista(&lista, m1);
+	afisareListaMasiniDeLaInceput(lista);
 
+	Masina m2 = creareMasina(100, 4, 12000.0f, "Sandero", "Ana", 'D');
 	printf("Adaugare la final:\n");
-	adaugaMasinaInLista(&cap, (Masina) { 100, 4, 12000.0f, "Sandero", "Ana", 'D' });
-	afisareListaMasini(cap);
+	adaugaMasinaInLista(&lista, m2);
+	afisareListaMasiniDeLaInceput(lista);
 
-	printf("Calcul pret mediu:\n");
-	float pretMediu = calculeazaPretMediu(cap);
+	float pretMediu = calculeazaPretMediu(lista);
 	printf("Pretul mediu este: %1.2f\n\n", pretMediu);
 
-	printf("Nume sofer masina cea mai scumpa:\n");
-	char* soferScump = getNumeSoferMasinaScumpa(cap);
+	char* soferScump = getNumeSoferMasinaScumpa(lista);
 	printf("Soferul cu masina cea mai scumpa este: %s\n\n", soferScump);
 	free(soferScump);
 
 	printf("Stergere masina dupa ID: %d\n", 1);
-	stergeMasinaDupaID(&cap, 1);
-	afisareListaMasini(cap);
+	stergeMasinaDupaID(&lista, 1);
+	afisareListaMasiniDeLaInceput(lista);
 
 	printf("Dezalocare lista:\n");
-	dezalocareLDMasini(&cap);
-	afisareListaMasini(cap);
+	dezalocareLDMasini(&lista);
+	afisareListaMasiniDeLaInceput(lista);
 
 	return 0;
 }
