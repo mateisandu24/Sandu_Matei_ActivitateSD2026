@@ -53,12 +53,12 @@ void afisareMasina(Masina masina) {
 
 Heap initializareHeap(int lungime) {
 	Heap heap;
-	
-  heap.lungime = lungime;
+
+	heap.lungime = lungime;
 	heap.nrElemente = 0;
 	heap.masini = (Masina*)malloc(lungime * sizeof(Masina));
-	
-  return heap;
+
+	return heap;
 }
 
 void filtreazaHeap(Heap heap, int pozitieNod) {
@@ -79,8 +79,11 @@ void filtreazaHeap(Heap heap, int pozitieNod) {
 		Masina aux = heap.masini[pozitieMax];
 		heap.masini[pozitieMax] = heap.masini[pozitieNod];
 		heap.masini[pozitieNod] = aux;
-	
-		filtreazaHeap(heap, pozitieMax);
+
+		if (pozitieMax < (heap.nrElemente - 1) / 2) {
+			filtreazaHeap(heap, pozitieMax);
+		}
+		
 	}
 
 
@@ -88,26 +91,26 @@ void filtreazaHeap(Heap heap, int pozitieNod) {
 
 Heap citireHeapDeMasiniDinFisier(const char* numeFisier) {
 	FILE* file = fopen(numeFisier, "r");
-	
-  if(!file) {
+
+	if (!file) {
 		printf("Eroare la deschiderea fisierului!");
 		return;
 	}
-	
-  else {
+
+	else {
 		Heap heap = initializareHeap(10);
-	
-    while (!feof(file)) {
+
+		while (!feof(file)) {
 			heap.masini[heap.nrElemente++] = citireMasinaDinFisier(file);
 		}
-		
-    fclose(file);
-		
-    for (int i = (heap.nrElemente - 2) / 2 ; i >= 0; i--) {
+
+		fclose(file);
+
+		for (int i = (heap.nrElemente - 2) / 2; i >= 0; i--) {
 			filtreazaHeap(heap, i);
 		}
-		
-    return heap;
+
+		return heap;
 	}
 }
 
@@ -125,25 +128,25 @@ void afiseazaHeapAscuns(Heap heap) {
 
 Masina extrageMasina(Heap* heap) {
 	Masina aux;
-	
-  if (heap->nrElemente <= 0) {
+
+	if (heap->nrElemente <= 0) {
 		printf("Heap-ul este gol!");
-		
-    aux.id = -1;
-		
-    return aux;
+
+		aux.id = -1;
+
+		return aux;
 	}
-	
-  else {
+
+	else {
 		heap->nrElemente--;
-		
-    aux = heap->masini[0];
+
+		aux = heap->masini[0];
 		heap->masini[0] = heap->masini[heap->nrElemente];
 		heap->masini[heap->nrElemente] = aux;
-		
-    filtreazaHeap(*heap, 0);
-		
-    return aux;
+
+		filtreazaHeap(*heap, 0);
+
+		return aux;
 	}
 }
 
@@ -151,33 +154,33 @@ Masina extrageMasina(Heap* heap) {
 void dezalocareHeap(Heap* heap) {
 	for (int i = 0;i < heap->lungime;i++) {
 		free(heap->masini[i].model);
-		free(heap->masini[i].numeSofer); 
+		free(heap->masini[i].numeSofer);
 	}
-	
-  free(heap->masini);
-  heap->masini = NULL;
-	heap->lungime=0;
+
+	free(heap->masini);
+	heap->masini = NULL;
+	heap->lungime = 0;
 	heap->nrElemente = 0;
 }
 
 int main() {
 	Heap heap = citireHeapDeMasiniDinFisier("masini.txt");
-  
+
 	afisareHeap(heap);
-	
-  printf("Extrageri");
+
+	printf("Extrageri");
 	afisareMasina(extrageMasina(&heap));
 	afisareMasina(extrageMasina(&heap));
 	afisareMasina(extrageMasina(&heap));
-	
-  printf("Heap Ascuns\n");
+
+	printf("Heap Ascuns\n");
 	afiseazaHeapAscuns(heap);
-	
-  dezalocareHeap(&heap);
-	
-  afisareHeap(heap);
-	
-  return 0;
+
+	dezalocareHeap(&heap);
+
+	afisareHeap(heap);
+
+	return 0;
 
 	return 0;
 }
